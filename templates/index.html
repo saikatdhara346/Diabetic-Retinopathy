@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetic Retinopathy Detection</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        img {
+            max-width: 100%;
+            max-height: 300px;
+            margin-bottom: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Deep Learning based Diabetic Retinopathy Detection Model</h1>
+
+    <form id="upload-form" action="/predict" method="post" enctype="multipart/form-data">
+        <label for="file">Upload an image:</label><br>
+        <input type="file" id="file" name="file" accept=".jpg, .jpeg, .png" required><br>
+        <button type="submit">Predict</button>
+    </form>
+
+    <img id="uploaded-image" src="" style="display: none;">
+
+    <div id="result"></div>
+</div>
+
+<script>
+document.getElementById('upload-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    var form = event.target;
+    var formData = new FormData(form);
+
+    fetch('/predict', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if ('error' in data) {
+            document.getElementById('result').innerText = data['error'];
+        } else {
+            var predictionProbability = data['prediction_probability'];
+            var resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+            var resultText = document.createElement('p');
+            resultText.innerText = 'Prediction Probability: ' + predictionProbability.toFixed(4);
+            resultDiv.appendChild(resultText);
+            if (predictionProbability > 0.5) {
+                resultText.style.color = 'red';
+                resultText.innerText += ' - Diabetic Retinopathy Detected';
+            } else {
+                resultText.style.color = 'green';
+                resultText.innerText += ' - Healthy';
+            }
+
+            var uploadedImage = document.getElementById('uploaded-image');
+            uploadedImage.src = URL.createObjectURL(form['file'].files[0]);
+            uploadedImage.style.display = 'block';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+</script>
+
+</body>
+</html>
